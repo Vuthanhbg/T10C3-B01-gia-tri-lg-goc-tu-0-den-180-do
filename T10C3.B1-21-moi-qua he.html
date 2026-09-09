@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô Phỏng Lượng Giác - Hai Góc Bù Nhau</title>
+    
+    <!-- Load MathJax để hiển thị công thức toán học -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-light: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --border: #e2e8f0;
+            --radar-bg: #0f172a;
+            --radar-cyan: #06b6d4;
+            --radar-orange: #f97316;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        button.secondary {
+            background: #475569;
+        }
+        button.secondary:hover {
+            background: #334155;
+        }
+
+        .slider-container {
+            width: 100%;
+            margin-top: 15px;
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .canvas-container {
+            width: 100%;
+            aspect-ratio: 4/3;
+            position: relative;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: background 0.3s;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none; /* Prevent scrolling when touching canvas */
+        }
+
+        .math-section {
+            margin-top: 15px;
+            flex: 1;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.95rem;
+        }
+
+        .data-table th, .data-table td {
+            border: 1px solid var(--border);
+            padding: 8px;
+            text-align: center;
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            color: #334155;
+        }
+        
+        .row-alpha { background: #f0fdf4; }
+        .row-beta { background: #eff6ff; }
+
+        .question-box {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .question-box h4 {
+            color: #b45309;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .question-box ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .question-box li {
+            margin-bottom: 8px;
+        }
+
+        .formula-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-weight: bold;
+            color: #475569;
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+        }
+        
+        /* Utility classes */
+        .text-blue { color: #0284c7; }
+        .text-orange { color: #ea580c; }
+        .text-green { color: #16a34a; }
+        .text-red { color: #dc2626; }
+        
+        /* Math display adjustments */
+        .math-display {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app-container">
+    <header>
+        <h1>2. Mối quan hệ giữa các giá trị lượng giác của hai góc bù nhau</h1>
+        <div>
+            <button id="fullscreenBtn" onclick="toggleFullScreen()" class="secondary">
+                <span id="fsIcon">⛶</span> Toàn màn hình
+            </button>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <!-- Khối Mô phỏng & Điều khiển -->
+        <div class="panel">
+            <div class="controls">
+                <button id="styleToggle" onclick="toggleStyle()">Chuyển sang Chân thực (Radar)</button>
+                <button class="secondary" onclick="setAngle(30)">30° & 150°</button>
+                <button class="secondary" onclick="setAngle(45)">45° & 135°</button>
+                <button class="secondary" onclick="setAngle(60)">60° & 120°</button>
+            </div>
+            
+            <div class="canvas-container" id="canvasWrap">
+                <canvas id="simCanvas"></canvas>
+            </div>
+
+            <div class="slider-container">
+                <label for="angleSlider">
+                    <strong>Góc <span class="text-blue">\(\alpha\)</span>: <span id="angleValueDisplay" class="text-blue" style="font-size:1.2rem;">45°</span></strong>
+                    <span style="margin: 0 10px;">|</span>
+                    <strong>Góc bù <span class="text-orange">\(180^\circ - \alpha\)</span>: <span id="compAngleDisplay" class="text-orange" style="font-size:1.2rem;">135°</span></strong>
+                </label>
+                <input type="range" id="angleSlider" min="0" max="90" value="45" step="1">
+            </div>
+        </div>
+
+        <!-- Khối Lý thuyết & Số liệu -->
+        <div class="panel">
+            <h3>So sánh tọa độ điểm M và M'</h3>
+            <table class="data-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Góc</th>
+                        <th>Điểm</th>
+                        <th>Hoành độ \(x\) (cos)</th>
+                        <th>Tung độ \(y\) (sin)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="row-alpha">
+                        <td><span class="text-blue" id="tdAlpha">45°</span></td>
+                        <td>M</td>
+                        <td id="tdCosAlpha">...</td>
+                        <td id="tdSinAlpha">...</td>
+                    </tr>
+                    <tr class="row-beta">
+                        <td><span class="text-orange" id="tdBeta">135°</span></td>
+                        <td>M'</td>
+                        <td id="tdCosBeta">...</td>
+                        <td id="tdSinBeta">...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="question-box">
+                <h4>💡 Hoạt động khám phá</h4>
+                <p>Em hãy nêu mối quan hệ giữa hai góc \(\widehat{xOM}\) và \(\widehat{xOM'}\)</p>
+                <ul>
+                    <li>Nhận xét về vị trí của điểm \(M\) và \(M'\) so với trục tung \(Oy\)?</li>
+                    <li>Từ đó, so sánh tung độ (\(\sin\)) của hai điểm \(M\) và \(M'\)?</li>
+                    <li>So sánh hoành độ (\(\cos\)) của hai điểm \(M\) và \(M'\)? Điểm nào mang dấu dương, điểm nào mang dấu âm?</li>
+                </ul>
+            </div>
+            
+            <div class="math-section">
+                <h4>Kết luận:</h4>
+                <p>Hai điểm \(M\) và \(M'\) đối xứng với nhau qua trục tung \(Oy\), do đó:</p>
+                <ul>
+                    <li>Chúng có <strong>cùng tung độ</strong> (cùng giá trị \(\sin\)).</li>
+                    <li>Chúng có <strong>hoành độ đối nhau</strong> (giá trị \(\cos\) trái dấu).</li>
+                </ul>
+                
+                <div class="formula-box">
+                    <strong>Với mọi góc \(\alpha\) (\(0^\circ \le \alpha \le 180^\circ\)), ta có:</strong>
+                    <div class="math-display">
+                        <div style="text-align: left;">
+                            <p>\(\sin(180^\circ - \alpha) = \sin\alpha\)</p>
+                            <p>\(\cos(180^\circ - \alpha) = -\cos\alpha\)</p>
+                        </div>
+                        <div style="text-align: left;">
+                            <p>\(\tan(180^\circ - \alpha) = -\tan\alpha\) <small>(\(\alpha \ne 90^\circ\))</small></p>
+                            <p>\(\cot(180^\circ - \alpha) = -\cot\alpha\) <small>(\(\alpha \ne 0^\circ, 180^\circ\))</small></p>
+                        </div>
+                    </div>
+                    <p style="color: #dc2626; margin-top: 10px; font-weight: bold;">"Sin bù" (Chỉ có Sin giữ nguyên dấu)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    Tác giả: Vũ Trung Thành THPT Bình Giang 0979791802
+</footer>
+
+<script>
+    // State variables
+    let currentAlpha = 45;
+    let isRealisticMode = false;
+    let isAnimating = false;
+    let animationId = null;
+    let targetAlpha = 45;
+    
+    // DOM Elements
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const angleSlider = document.getElementById('angleSlider');
+    const angleValueDisplay = document.getElementById('angleValueDisplay');
+    const compAngleDisplay = document.getElementById('compAngleDisplay');
+    const styleToggleBtn = document.getElementById('styleToggle');
+    const canvasWrap = document.getElementById('canvasWrap');
+
+    // Utility: Format exact values for special angles (0 to 90)
+    const exactTrig = {
+        0:  { cos: '1', sin: '0', tan: '0', cot: '||' },
+        30: { cos: '\\frac{\\sqrt{3}}{2}', sin: '\\frac{1}{2}', tan: '\\frac{\\sqrt{3}}{3}', cot: '\\sqrt{3}' },
+        45: { cos: '\\frac{\\sqrt{2}}{2}', sin: '\\frac{\\sqrt{2}}{2}', tan: '1', cot: '1' },
+        60: { cos: '\\frac{1}{2}', sin: '\\frac{\\sqrt{3}}{2}', tan: '\\sqrt{3}', cot: '\\frac{\\sqrt{3}}{3}' },
+        90: { cos: '0', sin: '1', tan: '||', cot: '0' }
+    };
+
+    function resizeCanvas() {
+        const rect = canvasWrap.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        draw();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // Xử lý sự kiện kéo thanh trượt
+    angleSlider.addEventListener('input', (e) => {
+        currentAlpha = parseInt(e.target.value);
+        targetAlpha = currentAlpha;
+        updateData();
+        draw();
+    });
+
+    // Hàm set góc có animation nhẹ
+    function setAngle(val) {
+        targetAlpha = val;
+        if (!isAnimating) {
+            animateAngle();
+        }
+    }
+
+    function animateAngle() {
+        isAnimating = true;
+        const diff = targetAlpha - currentAlpha;
+        
+        if (Math.abs(diff) < 0.5) {
+            currentAlpha = targetAlpha;
+            angleSlider.value = currentAlpha;
+            updateData();
+            draw();
+            isAnimating = false;
+            return;
+        }
+
+        currentAlpha += diff * 0.15; // Smooth factor
+        angleSlider.value = Math.round(currentAlpha);
+        updateData();
+        draw();
+        
+        animationId = requestAnimationFrame(animateAngle);
+    }
+
+    function toggleStyle() {
+        isRealisticMode = !isRealisticMode;
+        if (isRealisticMode) {
+            styleToggleBtn.textContent = "Chuyển sang Sách giáo khoa";
+            canvasWrap.style.background = "var(--radar-bg)";
+        } else {
+            styleToggleBtn.textContent = "Chuyển sang Chân thực (Radar)";
+            canvasWrap.style.background = "white";
+        }
+        draw();
+    }
+
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                alert(`Không thể mở toàn màn hình: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+        const btn = document.getElementById('fullscreenBtn');
+        if (document.fullscreenElement) {
+            btn.innerHTML = '<span>✕</span> Thoát Toàn màn hình';
+            btn.classList.add('secondary');
+        } else {
+            btn.innerHTML = '<span id="fsIcon">⛶</span> Toàn màn hình';
+            btn.classList.remove('secondary');
+        }
+        setTimeout(resizeCanvas, 100);
+    });
+
+    function updateData() {
+        const roundedAlpha = Math.round(currentAlpha);
+        const beta = 180 - roundedAlpha;
+        
+        angleValueDisplay.textContent = `${roundedAlpha}°`;
+        compAngleDisplay.textContent = `${beta}°`;
+        
+        document.getElementById('tdAlpha').textContent = `${roundedAlpha}°`;
+        document.getElementById('tdBeta').textContent = `${beta}°`;
+        
+        let cosAlphaStr, sinAlphaStr, cosBetaStr, sinBetaStr;
+        
+        // Kiểm tra xem góc có giá trị chính xác không
+        if (exactTrig[roundedAlpha]) {
+            cosAlphaStr = `\\(${exactTrig[roundedAlpha].cos}\\)`;
+            sinAlphaStr = `\\(${exactTrig[roundedAlpha].sin}\\)`;
+            
+            // Tính cho góc bù
+            if (exactTrig[roundedAlpha].cos === '0') {
+                cosBetaStr = `\\(0\\)`;
+            } else {
+                cosBetaStr = `\\(-${exactTrig[roundedAlpha].cos}\\)`;
+            }
+            sinBetaStr = `\\(${exactTrig[roundedAlpha].sin}\\)`;
+        } else {
+            // Tính giá trị gần đúng
+            let rad = roundedAlpha * Math.PI / 180;
+            cosAlphaStr = Math.cos(rad).toFixed(3);
+            sinAlphaStr = Math.sin(rad).toFixed(3);
+            
+            let radBeta = beta * Math.PI / 180;
+            cosBetaStr = Math.cos(radBeta).toFixed(3);
+            sinBetaStr = Math.sin(radBeta).toFixed(3);
+        }
+        
+        document.getElementById('tdCosAlpha').innerHTML = cosAlphaStr;
+        document.getElementById('tdSinAlpha').innerHTML = sinAlphaStr;
+        document.getElementById('tdCosBeta').innerHTML = cosBetaStr;
+        document.getElementById('tdSinBeta').innerHTML = sinBetaStr;
+
+        if (window.MathJax) {
+            // Dùng timeout nhỏ để tránh giật lag khi kéo slider liên tục
+            clearTimeout(window.mathJaxTimeout);
+            window.mathJaxTimeout = setTimeout(() => {
+                MathJax.typesetPromise([document.getElementById('dataTable')]).catch(err => console.log(err));
+            }, 100);
+        }
+    }
+
+    function drawTextbook() {
+        const width = canvasWrap.clientWidth;
+        const height = canvasWrap.clientHeight;
+        const cx = width / 2;
+        const cy = height * 0.75; // Đẩy tâm xuống dưới
+        const radius = Math.min(width, height) * 0.45;
+        
+        const radAlpha = currentAlpha * Math.PI / 180;
+        const beta = 180 - currentAlpha;
+        const radBeta = beta * Math.PI / 180;
+        
+        const mx = cx + radius * Math.cos(radAlpha);
+        const my = cy - radius * Math.sin(radAlpha);
+        
+        const mpx = cx + radius * Math.cos(radBeta);
+        const mpy = cy - radius * Math.sin(radBeta);
+
+        ctx.clearRect(0, 0, width, height);
+
+        // 1. Hệ trục tọa độ
+        ctx.beginPath();
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 1.5;
+        // Trục Ox
+        ctx.moveTo(cx - radius - 40, cy);
+        ctx.lineTo(cx + radius + 40, cy);
+        // Trục Oy
+        ctx.moveTo(cx, cy + 20);
+        ctx.lineTo(cx, cy - radius - 40);
+        ctx.stroke();
+
+        // Mũi tên Ox
+        ctx.beginPath();
+        ctx.moveTo(cx + radius + 40, cy);
+        ctx.lineTo(cx + radius + 30, cy - 5);
+        ctx.lineTo(cx + radius + 30, cy + 5);
+        ctx.fill();
+
+        // Mũi tên Oy
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - radius - 40);
+        ctx.lineTo(cx - 5, cy - radius - 30);
+        ctx.lineTo(cx + 5, cy - radius - 30);
+        ctx.fill();
+
+        // 2. Nửa đường tròn
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI, true);
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 3. Đường thẳng nối M và M' (Cùng tung độ)
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(mpx, mpy);
+        ctx.lineTo(mx, my);
+        ctx.strokeStyle = "#64748b";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Đường dóng xuống Ox của M và M'
+        ctx.beginPath();
+        ctx.moveTo(mx, my);
+        ctx.lineTo(mx, cy);
+        ctx.moveTo(mpx, mpy);
+        ctx.lineTo(mpx, cy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 4. Các vector OM và OM'
+        // OM (Xanh blue)
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(mx, my);
+        ctx.strokeStyle = "#0284c7";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // OM' (Cam)
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(mpx, mpy);
+        ctx.strokeStyle = "#ea580c";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 5. Vẽ các cung góc
+        // Cung Alpha (Xanh blue)
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius * 0.2, 0, -radAlpha, true);
+        ctx.strokeStyle = "#0284c7";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // Vạch song song cho cung Alpha
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius * 0.22, 0, -radAlpha, true);
+        ctx.stroke();
+
+        // Cung bù (Cam) bên trái, đối xứng với Alpha
+        if (currentAlpha > 0) {
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * 0.2, Math.PI, -radBeta, false); // false = chiều kim đồng hồ
+            ctx.strokeStyle = "#ea580c";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            // Vạch song song
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * 0.22, Math.PI, -radBeta, false);
+            ctx.stroke();
+        }
+
+        // Cung lớn (180 - alpha) (Nhạt)
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius * 0.35, 0, -radBeta, true);
+        ctx.strokeStyle = "rgba(234, 88, 12, 0.5)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 6. Labels (Nhãn)
+        ctx.font = "italic 16px Arial";
+        ctx.fillStyle = "#000";
+        ctx.fillText("x", cx + radius + 30, cy + 20);
+        ctx.fillText("y", cx - 20, cy - radius - 30);
+        ctx.fillText("O", cx - 15, cy + 20);
+        
+        // Nhãn trục
+        ctx.font = "16px Arial";
+        ctx.fillText("1", cx + radius - 5, cy - 10);
+        ctx.fillText("−1", cx - radius - 20, cy - 10);
+        
+        // Nhãn x0, -x0, y0
+        if (currentAlpha > 5 && currentAlpha < 85) {
+            ctx.fillStyle = "#0284c7"; // x0 màu xanh
+            ctx.fillText("x₀", mx - 10, cy + 20);
+            ctx.fillStyle = "#ea580c"; // -x0 màu cam
+            ctx.fillText("−x₀", mpx - 15, cy + 20);
+            ctx.fillStyle = "#16a34a"; // y0 màu xanh lá
+            ctx.fillText("y₀", cx + 5, my + 15);
+        }
+
+        // Nhãn điểm M, M'
+        ctx.font = "italic 16px Arial";
+        ctx.fillStyle = "#0284c7";
+        ctx.fillText("M", mx + 5, my - 5);
+        ctx.fillStyle = "#ea580c";
+        ctx.fillText("M'", mpx - 25, mpy - 5);
+
+        // Nhãn góc
+        if (currentAlpha > 15) {
+            ctx.fillStyle = "#0284c7";
+            ctx.font = "14px Arial";
+            ctx.fillText(`α`, cx + radius*0.25 * Math.cos(radAlpha/2), cy - radius*0.25 * Math.sin(radAlpha/2));
+            
+            ctx.fillStyle = "#ea580c";
+            ctx.fillText(`180°−α`, cx - radius*0.4, cy - radius*0.4);
+        }
+
+        // Vẽ các điểm
+        const drawPoint = (x, y, color) => { 
+            ctx.beginPath(); 
+            ctx.arc(x, y, 4, 0, Math.PI*2); 
+            ctx.fillStyle = color;
+            ctx.fill(); 
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+        drawPoint(mx, my, "#0284c7");
+        drawPoint(mpx, mpy, "#ea580c");
+        drawPoint(cx, cy, "#000");
+    }
+
+    function drawRealistic() {
+        const width = canvasWrap.clientWidth;
+        const height = canvasWrap.clientHeight;
+        const cx = width / 2;
+        const cy = height * 0.75;
+        const radius = Math.min(width, height) * 0.5;
+        
+        const radAlpha = currentAlpha * Math.PI / 180;
+        const beta = 180 - currentAlpha;
+        const radBeta = beta * Math.PI / 180;
+        
+        const mx = cx + radius * 0.8 * Math.cos(radAlpha);
+        const my = cy - radius * 0.8 * Math.sin(radAlpha);
+        
+        const mpx = cx + radius * 0.8 * Math.cos(radBeta);
+        const mpy = cy - radius * 0.8 * Math.sin(radBeta);
+
+        ctx.clearRect(0, 0, width, height);
+
+        // Lưới Radar
+        ctx.strokeStyle = "rgba(6, 182, 212, 0.2)"; // Cyan nhạt
+        ctx.lineWidth = 1;
+        
+        // Vòng tròn
+        for(let i=1; i<=4; i++) {
+            ctx.beginPath();
+            ctx.arc(cx, cy, (radius*0.8/4)*i, 0, Math.PI, true);
+            ctx.stroke();
+        }
+
+        // Tia radar (mỗi 15 độ)
+        for(let a=0; a<=180; a+=15) {
+            let tr = a * Math.PI / 180;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + radius * 0.8 * Math.cos(tr), cy - radius * 0.8 * Math.sin(tr));
+            ctx.stroke();
+        }
+
+        // Đường chân trời
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(6, 182, 212, 0.8)";
+        ctx.lineWidth = 2;
+        ctx.moveTo(0, cy);
+        ctx.lineTo(width, cy);
+        ctx.stroke();
+        
+        // Trục dọc
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx, 0);
+        ctx.stroke();
+
+        // Mục tiêu 1 (Alpha - Cyan)
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(mx, my);
+        ctx.strokeStyle = "var(--radar-cyan)";
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = "var(--radar-cyan)";
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.arc(mx, my, 6, 0, Math.PI*2);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+        ctx.stroke();
+
+        // Mục tiêu 2 (Beta - Orange)
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(mpx, mpy);
+        ctx.strokeStyle = "var(--radar-orange)";
+        ctx.lineWidth = 3;
+        ctx.shadowColor = "var(--radar-orange)";
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(mpx, mpy, 6, 0, Math.PI*2);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0; // reset
+
+        // Kết nối hai mục tiêu (Cùng vĩ độ/tung độ)
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(mx, my);
+        ctx.lineTo(mpx, mpy);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        // Dóng xuống chân trời
+        ctx.beginPath();
+        ctx.moveTo(mx, my);
+        ctx.lineTo(mx, cy);
+        ctx.moveTo(mpx, mpy);
+        ctx.lineTo(mpx, cy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Thông số HUD
+        ctx.font = "14px monospace";
+        
+        // HUD Target 1
+        ctx.fillStyle = "var(--radar-cyan)";
+        ctx.textAlign = "left";
+        ctx.fillText(`TGT 1: ${Math.round(currentAlpha)}°`, 10, 20);
+        ctx.fillText(`DIST X: ${Math.cos(radAlpha).toFixed(2)}`, 10, 40);
+        ctx.fillText(`ALT Y: ${Math.sin(radAlpha).toFixed(2)}`, 10, 60);
+
+        // HUD Target 2
+        ctx.fillStyle = "var(--radar-orange)";
+        ctx.textAlign = "right";
+        ctx.fillText(`TGT 2: ${Math.round(beta)}°`, width - 10, 20);
+        ctx.fillText(`DIST X: ${Math.cos(radBeta).toFixed(2)}`, width - 10, 40);
+        ctx.fillText(`ALT Y: ${Math.sin(radBeta).toFixed(2)}`, width - 10, 60);
+
+        // Cảnh báo đối xứng
+        if(currentAlpha !== 90) {
+            ctx.textAlign = "center";
+            ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+            ctx.fillText(`ALTITUDE MATCH (SIN): TRUE`, cx, 20);
+            ctx.fillText(`DISTANCE INVERSE (COS): TRUE`, cx, 40);
+        }
+
+        // Tâm
+        ctx.beginPath();
+        ctx.arc(cx, cy, 5, 0, Math.PI*2);
+        ctx.fillStyle = "#ef4444";
+        ctx.fill();
+    }
+
+    function draw() {
+        if (isRealisticMode) {
+            drawRealistic();
+        } else {
+            drawTextbook();
+        }
+    }
+
+    window.onload = () => {
+        updateData();
+        resizeCanvas();
+        // Redraw after a slight delay to ensure fonts are loaded
+        setTimeout(draw, 150);
+    };
+
+</script>
+</body>
+</html>

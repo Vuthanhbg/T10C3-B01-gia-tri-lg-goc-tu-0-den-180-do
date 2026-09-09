@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô Phỏng Lượng Giác - Vòng Đu Quay</title>
+
+    <!-- Load MathJax để hiển thị công thức toán học -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary: #475569;
+            --secondary-hover: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-light: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --border: #e2e8f0;
+            
+            --sky-top: #3b82f6;
+            --sky-bottom: #bae6fd;
+            --ferris-wheel: #475569;
+            --cabin: #ef4444;
+            --textbook-blue: #0284c7;
+            --textbook-red: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        button:hover { background: var(--primary-hover); }
+        button.secondary { background: var(--secondary); }
+        button.secondary:hover { background: var(--secondary-hover); }
+        button.success { background: var(--success); }
+        button.warning { background: var(--warning); }
+        button.danger { background: var(--danger); }
+
+        .slider-container {
+            width: 100%;
+            margin-top: 15px;
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .canvas-container {
+            width: 100%;
+            aspect-ratio: 1/1; 
+            position: relative;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: background 0.3s;
+            max-height: 500px;
+            margin: 0 auto;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.95rem;
+        }
+
+        .data-table th, .data-table td {
+            border: 1px solid var(--border);
+            padding: 10px;
+            text-align: center;
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            color: #334155;
+        }
+        
+        .row-highlight {
+            background: #eff6ff;
+            font-weight: bold;
+        }
+
+        .pedagogy-box {
+            background: #fffbeb;
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #b45309;
+            margin-bottom: 8px;
+        }
+
+        .pedagogy-box ul { padding-left: 20px; }
+        .pedagogy-box li { margin-bottom: 5px; }
+
+        .solution-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none; /* Ẩn mặc định */
+        }
+
+        .solution-box.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-weight: bold;
+            color: #475569;
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+        }
+        
+        .text-blue { color: var(--textbook-blue); }
+        .text-red { color: var(--textbook-red); }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app-container">
+    <header>
+        <h1>Vận dụng: Tính độ cao vòng đu quay</h1>
+        <div>
+            <button id="fullscreenBtn" onclick="toggleFullScreen()" class="secondary">
+                <span id="fsIcon">⛶</span> Toàn màn hình
+            </button>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <!-- Khối Mô phỏng & Điều khiển -->
+        <div class="panel">
+            <div class="controls">
+                <button id="styleToggle" onclick="toggleStyle()">Chuyển sang Chân thực</button>
+                <button id="playPauseBtn" onclick="togglePlay()" class="success">▶ Phát</button>
+                <button onclick="resetSim()" class="danger">↺ Làm lại</button>
+            </div>
+            
+            <div class="canvas-container" id="canvasWrap">
+                <canvas id="simCanvas"></canvas>
+            </div>
+
+            <div class="slider-container">
+                <div class="slider-header">
+                    <label for="timeSlider"><strong>Thời gian: <span id="timeDisplay" class="text-blue">0</span> phút</strong></label>
+                    <button onclick="jumpTo(20)" class="secondary" style="padding: 5px 10px; font-size: 0.9em;">Tới 20 phút</button>
+                </div>
+                <input type="range" id="timeSlider" min="0" max="60" value="0" step="0.1">
+                <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#64748b; margin-top:5px;">
+                    <span>0 (Bắt đầu)</span>
+                    <span>30 (1 vòng)</span>
+                    <span>60 (2 vòng)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>Thông số động</h3>
+            <p>Bán kính: \(R = 75\) m | Chiều cao tâm: \(h_0 = 90\) m | Chu kỳ: \(T = 30\) phút</p>
+            
+            <table class="data-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Thời gian (phút)</th>
+                        <th>Góc quay (\(\alpha\))</th>
+                        <th>Độ cao (\(h\))</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="row-highlight">
+                        <td id="tdCurrentTime" class="text-blue">0.0</td>
+                        <td id="tdCurrentAngle">0.0°</td>
+                        <td id="tdCurrentHeight" class="text-red">15.0 m</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="controls" style="margin-top: 20px;">
+                <button id="solutionBtn" onclick="toggleSolution()" class="warning">
+                    👁 Hiển thị Lời giải chi tiết
+                </button>
+            </div>
+
+            <div class="solution-box" id="solutionBox">
+                <h4 style="color: #166534; margin-bottom: 10px;">Lời giải:</h4>
+                <p>Gọi thời điểm bắt đầu người đó vào cabin là \(t = 0\).</p>
+                <p>Tốc độ góc của vòng đu quay là: <br>
+                   \(\omega = \frac{360^\circ}{30} = 12^\circ\)/phút (hoặc \(\frac{2\pi}{30} = \frac{\pi}{15}\) rad/phút).</p>
+                <p>Giả sử tâm vòng quay là gốc toạ độ \(O(0,0)\), phương trình độ cao so với mặt đất (dịch trục tung lên \(90\)):</p>
+                <div style="text-align: center; margin: 10px 0; font-size: 1.1em;">
+                    \(h(t) = 90 - 75 \cdot \cos(12^\circ \cdot t)\)
+                </div>
+                <p>Sau 20 phút (\(t = 20\)), góc quét được là \(12^\circ \times 20 = 240^\circ\).</p>
+                <p>Độ cao của người đó lúc này là:</p>
+                <div style="text-align: center; margin: 10px 0; font-weight: bold; color: var(--textbook-red);">
+                    \(h(20) = 90 - 75 \cdot \cos(240^\circ) = 90 - 75 \cdot (-0.5) = 127.5 \text{ (m)}\)
+                </div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4>💡 Câu hỏi gợi mở cho học sinh</h4>
+                <ul>
+                    <li>Chọn hệ toạ độ \(Oxy\) với \(O\) là tâm vòng quay. Ở thời điểm bắt đầu (vị trí thấp nhất), cabin nằm trên nửa trục toạ độ nào?</li>
+                    <li>Sau 20 phút quay, người đó đã quét được một góc bao nhiêu độ tính từ lúc xuất phát?</li>
+                    <li>Với bán kính \(75m\), tung độ của người đó (so với tâm \(O\)) tại phút 20 được tính bằng công thức lượng giác nào?</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    Tác giả: Vũ Trung Thành THPT Bình Giang 0979791802
+</footer>
+
+<script>
+    // Constants
+    const period = 30; // Chu kỳ (phút)
+    const maxTime = 60; // phút
+    const R = 75; // Bán kính
+    const h0 = 90; // Độ cao tâm
+    const omegaDeg = 360 / period; // Vận tốc góc (độ/phút)
+
+    // State
+    let time = 0;
+    let isRealisticMode = false;
+    let isPlaying = false;
+    let isSolutionVisible = false;
+    let animationId = null;
+    let lastTimestamp = 0;
+
+    // DOM
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const canvasWrap = document.getElementById('canvasWrap');
+    const timeSlider = document.getElementById('timeSlider');
+    const styleToggleBtn = document.getElementById('styleToggle');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const solutionBtn = document.getElementById('solutionBtn');
+    const solutionBox = document.getElementById('solutionBox');
+
+    // Display elements
+    const tdCurrentTime = document.getElementById('tdCurrentTime');
+    const tdCurrentAngle = document.getElementById('tdCurrentAngle');
+    const tdCurrentHeight = document.getElementById('tdCurrentHeight');
+    const timeDisplay = document.getElementById('timeDisplay');
+
+    // Calculations
+    function getHeight(t) {
+        return h0 - R * Math.cos((omegaDeg * t) * Math.PI / 180);
+    }
+    
+    function getAngle(t) {
+        return (omegaDeg * t) % 360;
+    }
+
+    function resizeCanvas() {
+        const rect = canvasWrap.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+        draw();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                alert(`Lỗi: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+        const btn = document.getElementById('fullscreenBtn');
+        if (document.fullscreenElement) {
+            btn.innerHTML = '<span>✕</span> Thoát Toàn màn hình';
+        } else {
+            btn.innerHTML = '<span id="fsIcon">⛶</span> Toàn màn hình';
+        }
+        setTimeout(resizeCanvas, 100);
+    });
+
+    function toggleStyle() {
+        isRealisticMode = !isRealisticMode;
+        if (isRealisticMode) {
+            styleToggleBtn.textContent = "Chuyển sang Sách giáo khoa";
+            canvasWrap.style.background = "linear-gradient(to bottom, var(--sky-top), var(--sky-bottom))";
+        } else {
+            styleToggleBtn.textContent = "Chuyển sang Chân thực";
+            canvasWrap.style.background = "white";
+        }
+        draw();
+    }
+
+    function toggleSolution() {
+        isSolutionVisible = !isSolutionVisible;
+        if (isSolutionVisible) {
+            solutionBox.classList.add('active');
+            solutionBtn.innerHTML = '🙈 Ẩn Lời giải';
+            // Render MathJax lại nếu cần
+            if(window.MathJax) MathJax.typesetPromise();
+        } else {
+            solutionBox.classList.remove('active');
+            solutionBtn.innerHTML = '👁 Hiển thị Lời giải chi tiết';
+        }
+    }
+
+    timeSlider.addEventListener('input', (e) => {
+        time = parseFloat(e.target.value);
+        updateUI();
+        draw();
+    });
+
+    function jumpTo(t) {
+        time = t;
+        timeSlider.value = time;
+        if (isPlaying) togglePlay();
+        updateUI();
+        draw();
+    }
+
+    function resetSim() {
+        time = 0;
+        timeSlider.value = 0;
+        if (isPlaying) togglePlay();
+        updateUI();
+        draw();
+    }
+
+    function togglePlay() {
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+            playPauseBtn.innerHTML = '⏸ Tạm dừng';
+            playPauseBtn.classList.replace('success', 'danger');
+            lastTimestamp = performance.now();
+            animationId = requestAnimationFrame(animate);
+        } else {
+            playPauseBtn.innerHTML = '▶ Phát';
+            playPauseBtn.classList.replace('danger', 'success');
+            cancelAnimationFrame(animationId);
+        }
+    }
+
+    function animate(timestamp) {
+        if (!isPlaying) return;
+        const deltaTime = timestamp - lastTimestamp;
+        lastTimestamp = timestamp;
+        
+        // 1 giây thực tế = 2 phút mô phỏng
+        time += (deltaTime / 1000) * 2; 
+        
+        if (time >= maxTime) {
+            time = maxTime;
+            togglePlay();
+        }
+        
+        timeSlider.value = time;
+        updateUI();
+        draw();
+        
+        if (isPlaying) animationId = requestAnimationFrame(animate);
+    }
+
+    function updateUI() {
+        const h = getHeight(time);
+        const ang = getAngle(time);
+        
+        timeDisplay.textContent = time.toFixed(1);
+        tdCurrentTime.textContent = time.toFixed(1);
+        tdCurrentAngle.textContent = ang.toFixed(1) + '°';
+        tdCurrentHeight.textContent = h.toFixed(1) + ' m';
+
+        // Đổi màu nếu đúng 20 phút
+        if (Math.abs(time - 20) < 0.1) {
+            tdCurrentHeight.style.fontSize = "1.2em";
+        } else {
+            tdCurrentHeight.style.fontSize = "1em";
+        }
+    }
+
+    function drawTextbook() {
+        const w = canvasWrap.clientWidth;
+        const h = canvasWrap.clientHeight;
+        ctx.clearRect(0, 0, w, h);
+
+        // Quy đổi tỷ lệ, coi như không gian cao ~ 200m
+        const scale = (h * 0.8) / 200; 
+        const cx = w * 0.35; // Tâm nằm bên trái một chút
+        const cy = h - (h0 * scale) - 30; // Mặt đất cách đáy 30px
+        const radius = R * scale;
+        const groundY = h - 30;
+
+        // Vẽ mặt đất
+        ctx.beginPath();
+        ctx.moveTo(10, groundY);
+        ctx.lineTo(w - 10, groundY);
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(10, groundY + 2);
+        ctx.lineTo(w - 10, groundY + 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Hệ trục toạ độ
+        ctx.beginPath();
+        ctx.strokeStyle = "var(--textbook-red)";
+        ctx.lineWidth = 1.5;
+        // Trục Ox (ngang)
+        ctx.moveTo(20, cy);
+        ctx.lineTo(w - 20, cy);
+        ctx.lineTo(w - 30, cy - 5); ctx.moveTo(w - 20, cy); ctx.lineTo(w - 30, cy + 5);
+        // Trục Oy (dọc)
+        ctx.moveTo(cx, groundY + 20);
+        ctx.lineTo(cx, cy - radius - 30);
+        ctx.lineTo(cx - 5, cy - radius - 20); ctx.moveTo(cx, cy - radius - 30); ctx.lineTo(cx + 5, cy - radius - 20);
+        ctx.stroke();
+
+        ctx.fillStyle = "var(--textbook-red)";
+        ctx.font = "italic 16px Arial";
+        ctx.fillText("x", w - 20, cy - 10);
+        ctx.fillText("y", cx + 10, cy - radius - 20);
+        ctx.fillText("O", cx - 20, cy + 20);
+
+        // Vòng tròn
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, 2*Math.PI);
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Tính vị trí Cabin
+        // Góc toán học (bắt đầu từ -90 độ)
+        const mathRad = (omegaDeg * time - 90) * Math.PI / 180;
+        // Chuyển sang góc canvas (phải lật ngược trục Y)
+        const px = cx + radius * Math.cos(mathRad);
+        const py = cy - radius * Math.sin(mathRad); // Y hướng lên
+
+        // Vector OM
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py);
+        ctx.strokeStyle = "var(--textbook-blue)"; ctx.lineWidth = 2; ctx.stroke();
+
+        // Điểm M
+        ctx.beginPath(); ctx.arc(px, py, 5, 0, 2*Math.PI);
+        ctx.fillStyle = "var(--textbook-blue)"; ctx.fill();
+        ctx.fillText("M", px + 10, py - 10);
+
+        // Đường dóng sang trục Y (Độ cao hiện tại so với tâm)
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(cx, py);
+        ctx.strokeStyle = "var(--textbook-blue)"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Vẽ các thước đo bên phải
+        const lineX = w * 0.8;
+        
+        // Dóng ngang ra thước đo
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(lineX + 30, cy); ctx.strokeStyle = "red"; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, groundY); ctx.lineTo(lineX + 30, groundY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(lineX - 10, py); ctx.strokeStyle = "var(--textbook-blue)"; ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Thước 90m (Mặt đất lên tâm)
+        drawArrowLine(lineX + 20, groundY, lineX + 20, cy, "red");
+        ctx.save(); ctx.translate(lineX + 35, cy + (groundY-cy)/2); ctx.rotate(Math.PI/2);
+        ctx.fillStyle="red"; ctx.fillText("90 m", -15, 0); ctx.restore();
+
+        // Thước 75m (Bán kính)
+        drawArrowLine(lineX, cy, lineX, cy + radius, "red"); // Đoạn xuống
+        ctx.save(); ctx.translate(lineX + 15, cy + radius/2); ctx.rotate(Math.PI/2);
+        ctx.fillText("75 m", -15, 0); ctx.restore();
+
+        // Thước H(t) hiện tại
+        drawArrowLine(lineX - 25, groundY, lineX - 25, py, "var(--textbook-blue)");
+        ctx.fillStyle = "var(--textbook-blue)";
+        ctx.font = "bold 14px Arial";
+        ctx.fillText(`h = ${getHeight(time).toFixed(1)} m`, lineX - 90, py - 10);
+
+        // Góc quay
+        if(time > 0) {
+            ctx.beginPath();
+            // Góc bắt đầu là 90 độ (đáy) hướng lên
+            ctx.arc(cx, cy, radius * 0.25, Math.PI/2, Math.PI/2 - (omegaDeg * time)*Math.PI/180, true);
+            ctx.strokeStyle = "var(--textbook-blue)";
+            ctx.stroke();
+        }
+    }
+
+    function drawArrowLine(x1, y1, x2, y2, color) {
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+        ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.stroke();
+        const arr = 6;
+        // Arrow 1
+        ctx.beginPath(); ctx.moveTo(x1, y1);
+        ctx.lineTo(x1 - arr/2, y1 + (y1<y2?-arr:arr)); ctx.lineTo(x1 + arr/2, y1 + (y1<y2?-arr:arr));
+        ctx.fillStyle = color; ctx.fill();
+        // Arrow 2
+        ctx.beginPath(); ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - arr/2, y2 + (y2<y1?-arr:arr)); ctx.lineTo(x2 + arr/2, y2 + (y2<y1?-arr:arr));
+        ctx.fill();
+    }
+
+    function drawRealistic() {
+        const w = canvasWrap.clientWidth;
+        const h = canvasWrap.clientHeight;
+        ctx.clearRect(0, 0, w, h);
+
+        const scale = (h * 0.7) / 200; 
+        const cx = w * 0.5;
+        const groundY = h - 20; 
+        const cy = groundY - (h0 * scale);
+        const radius = R * scale;
+
+        // Vẽ Skyline thành phố (Background)
+        ctx.fillStyle = "rgba(148, 163, 184, 0.5)";
+        ctx.fillRect(cx - 250, groundY - 150, 80, 150);
+        ctx.fillRect(cx - 150, groundY - 200, 70, 200);
+        ctx.fillRect(cx + 100, groundY - 120, 60, 120);
+        ctx.fillRect(cx + 180, groundY - 180, 50, 180);
+
+        // Nền đất / Nước
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(0, groundY, w, h - groundY);
+
+        // Chân đế Ferris Wheel
+        ctx.beginPath();
+        ctx.moveTo(cx, cy); ctx.lineTo(cx - 50, groundY); ctx.lineTo(cx + 50, groundY);
+        ctx.fillStyle = "#64748b"; ctx.fill();
+        ctx.strokeStyle = "#334155"; ctx.lineWidth = 2; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, groundY); ctx.stroke();
+
+        // Vòng quay thép
+        ctx.beginPath(); ctx.arc(cx, cy, radius, 0, 2*Math.PI); 
+        ctx.strokeStyle = "#cbd5e1"; ctx.lineWidth = 5; ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx, cy, radius - 8, 0, 2*Math.PI); 
+        ctx.lineWidth = 1.5; ctx.stroke();
+
+        // Các nan hoa (Spokes) và Cabin tĩnh
+        const numSpokes = 24;
+        for (let i = 0; i < numSpokes; i++) {
+            let angle = (i * 360 / numSpokes) * Math.PI / 180;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + radius * Math.cos(angle), cy + radius * Math.sin(angle));
+            ctx.strokeStyle = "rgba(100, 116, 139, 0.7)"; 
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // Vẽ các cabin phụ
+            let cX = cx + radius * Math.cos(angle);
+            let cY = cy + radius * Math.sin(angle);
+            ctx.fillStyle = "#1e293b";
+            ctx.fillRect(cX - 4, cY, 8, 10);
+        }
+
+        // Tâm đỏ
+        ctx.beginPath(); ctx.arc(cx, cy, 10, 0, 2*Math.PI);
+        ctx.fillStyle = "#f87171"; ctx.fill(); ctx.stroke();
+
+        // Tính vị trí Cabin chính
+        const mathRad = (omegaDeg * time - 90) * Math.PI / 180;
+        const px = cx + radius * Math.cos(mathRad);
+        const py = cy - radius * Math.sin(mathRad); 
+
+        // Vẽ Cabin nổi bật
+        ctx.fillStyle = "var(--cabin)";
+        ctx.beginPath(); ctx.roundRect(px - 12, py, 24, 30, 4); ctx.fill();
+        ctx.fillStyle = "#bae6fd"; ctx.fillRect(px - 8, py + 5, 16, 12); // Cửa sổ
+        
+        // Highlight Glow
+        ctx.shadowColor = "#fca5a5"; ctx.shadowBlur = 15;
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+        ctx.strokeRect(px - 12, py, 24, 30);
+        ctx.shadowBlur = 0;
+
+        // Trục mô phỏng ngang (Màu đỏ giống trong ảnh SGK)
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy);
+        ctx.strokeStyle = "rgba(220, 38, 38, 0.6)"; ctx.lineWidth = 2; ctx.stroke();
+        ctx.setLineDash([]);
+
+        // HUD thông tin
+        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        ctx.roundRect(15, 15, 160, 75, 8);
+        ctx.fill();
+        
+        ctx.fillStyle = "#fff"; ctx.font = "14px Arial";
+        ctx.fillText(`Thời gian: ${time.toFixed(1)} phút`, 25, 40);
+        ctx.fillStyle = "#fca5a5";
+        ctx.fillText(`Độ cao: ${getHeight(time).toFixed(1)} m`, 25, 65);
+    }
+
+    function draw() {
+        if (isRealisticMode) {
+            drawRealistic();
+        } else {
+            drawTextbook();
+        }
+    }
+
+    // Khởi chạy
+    window.onload = () => {
+        updateUI();
+        resizeCanvas();
+        setTimeout(draw, 100); 
+    };
+</script>
+
+</body>
+</html>

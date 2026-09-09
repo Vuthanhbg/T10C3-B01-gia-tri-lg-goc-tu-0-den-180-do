@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô Phỏng: Giá Trị Lượng Giác Của Hai Góc Bù Nhau</title>
+    
+    <!-- Load MathJax để hiển thị công thức Toán học đẹp mắt -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    
+    <!-- 1. ĐẶT CẤU HÌNH MATHJAX Ở ĐÂY (Trước khi tải thư viện) -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+    </script>
+    
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-hover: #1557b0;
+            --success: #0f9d58;
+            --success-hover: #0b8043;
+            --danger: #d93025;
+            --danger-hover: #b31412;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #202124;
+            --border-color: #dadce0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        /* Controls Section */
+        .controls-top {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-toggle { background-color: #fbbc04; color: #202124; }
+        .btn-toggle:hover { background-color: #f2a600; }
+        
+        .btn-fullscreen { background-color: #607d8b; color: white; }
+        .btn-fullscreen:hover { background-color: #455a64; }
+
+        .btn-solution { background-color: var(--success); color: white; }
+        .btn-solution:hover { background-color: var(--success-hover); }
+
+        .btn-exit { background-color: var(--danger); color: white; }
+        .btn-exit:hover { background-color: var(--danger-hover); }
+
+        /* Slider */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            flex-grow: 1;
+            min-width: 250px;
+        }
+        
+        input[type="range"] {
+            flex-grow: 1;
+            cursor: pointer;
+            height: 6px;
+        }
+
+        .angle-badge {
+            background: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* Main Content Layout */
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* Canvas Area */
+        .canvas-section {
+            flex: 1 1 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+            background: #fff;
+        }
+
+        /* Info & Pedagogy Area */
+        .info-section {
+            flex: 1 1 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .panel h3 {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #eee;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .data-grid div {
+            padding: 8px;
+            background: #f1f3f4;
+            border-radius: 4px;
+        }
+        
+        .val-highlight { font-weight: bold; color: var(--primary); }
+
+        /* Solution Area */
+        #solution-box {
+            display: none; /* Ẩn mặc định */
+            background: #e6f4ea;
+            border-left: 4px solid var(--success);
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 8px 8px 0;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Footer */
+        footer {
+            background-color: #202124;
+            color: #9aa0a6;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+
+        .footer-controls {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .controls-top { flex-direction: column; align-items: stretch; }
+            .btn-group { justify-content: stretch; }
+            .btn-group button { flex: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app-container">
+    <header>
+        <h1>Mô phỏng: Quan hệ Lượng giác của Hai góc Bù nhau</h1>
+        <p>Toán học Lớp 10 - Góc $\alpha$ và $180^\circ - \alpha$</p>
+    </header>
+
+    <div class="controls-top">
+        <div class="btn-group">
+            <button class="btn-toggle" id="styleToggle">
+                🎨 Đổi sang chế độ Chân thực
+            </button>
+            <button class="btn-fullscreen" id="fullscreenBtn">
+                ⛶ Toàn màn hình
+            </button>
+        </div>
+        <div class="slider-container">
+            <label for="angleSlider"><strong>Góc $\alpha$:</strong></label>
+            <input type="range" id="angleSlider" min="0" max="180" value="45">
+            <span class="angle-badge" id="angleValue">45°</span>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <section class="canvas-section" aria-label="Khu vực vẽ mô phỏng">
+            <canvas id="simCanvas" width="700" height="420"></canvas>
+            
+            <div id="solution-box">
+                <h3 style="color: var(--success); margin-bottom: 10px;">📖 Lời giải chi tiết:</h3>
+                <p>Gọi $M(x_0; y_0)$ là điểm trên nửa đường tròn đơn vị biểu diễn góc $\alpha$.</p>
+                <p>Gọi $M'(x'; y')$ là điểm biểu diễn góc $180^\circ - \alpha$.</p>
+                <p>Dựa vào hình vẽ (đối xứng qua trục tung $Oy$), ta thấy hai điểm $M$ và $M'$ có:</p>
+                <ul>
+                    <li>Cùng tung độ: $y' = y_0 \Rightarrow \sin(180^\circ - \alpha) = \sin\alpha$</li>
+                    <li>Hoành độ đối nhau: $x' = -x_0 \Rightarrow \cos(180^\circ - \alpha) = -\cos\alpha$</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="info-section">
+            <div class="panel">
+                <h3>📊 Thông số trực tiếp</h3>
+                <div class="data-grid">
+                    <div>Góc 1: <br><span class="val-highlight" id="valA">45°</span></div>
+                    <div>Góc 2: <br><span class="val-highlight" id="valB">135°</span></div>
+                    <div>$\sin(\alpha)$ <br><span class="val-highlight" id="valSinA">0.71</span></div>
+                    <div>$\sin(180^\circ-\alpha)$ <br><span class="val-highlight" id="valSinB">0.71</span></div>
+                    <div>$\cos(\alpha)$ <br><span class="val-highlight" id="valCosA">0.71</span></div>
+                    <div>$\cos(180^\circ-\alpha)$ <br><span class="val-highlight" id="valCosB">-0.71</span></div>
+                </div>
+            </div>
+
+            <div class="panel" style="background: #e8f0fe; border-color: #8ab4f8;">
+                <h3>🎯 Công thức cốt lõi</h3>
+                <p>Với góc $\alpha$ tùy ý ($0^\circ \le \alpha \le 180^\circ$):</p>
+                <p style="text-align: center; font-size: 1.2rem; margin: 10px 0;">
+                    $\sin(180^\circ - \alpha) = \sin\alpha$<br>
+                    $\cos(180^\circ - \alpha) = -\cos\alpha$
+                </p>
+                <div style="text-align: center; margin-top: 15px;">
+                    <button class="btn-solution" id="toggleSolutionBtn">Hiện lời giải</button>
+                </div>
+            </div>
+
+            <div class="panel pedagogy">
+                <h3>💡 Gợi ý sư phạm (Cho GV)</h3>
+                <ul style="padding-left: 20px;">
+                    <li>Yêu cầu học sinh kéo thanh trượt đến $\alpha = 90^\circ$ và nhận xét vị trí M, M'.</li>
+                    <li>Hỏi HS: "Từ việc chiếu điểm M và M' xuống trục Ox, trục Oy, các em thấy độ dài đại số của chúng có quan hệ gì?"</li>
+                    <li>Mở rộng: "Từ $\sin$ và $\cos$, hãy suy ra công thức cho $\tan(180^\circ-\alpha)$."</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p><strong>Tác giả:</strong> Vũ Trung Thành - Tổ Toán-Tin, THPT Bình Giang</p>
+        <p><strong>Zalo:</strong> 0979791802</p>
+        <div class="footer-controls">
+            <button class="btn-exit" id="exitBtn">🚪 Thoát và đóng trình duyệt</button>
+        </div>
+    </footer>
+</div>
+
+<script>
+    // Khởi tạo các phần tử DOM
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const angleSlider = document.getElementById('angleSlider');
+    const angleValue = document.getElementById('angleValue');
+    const styleToggleBtn = document.getElementById('styleToggle');
+    
+    // UI Elements cho giá trị
+    const valA = document.getElementById('valA');
+    const valB = document.getElementById('valB');
+    const valSinA = document.getElementById('valSinA');
+    const valSinB = document.getElementById('valSinB');
+    const valCosA = document.getElementById('valCosA');
+    const valCosB = document.getElementById('valCosB');
+
+    // Trạng thái ứng dụng
+    let currentStyle = 'textbook'; // 'textbook' | 'realistic'
+    let currentAngle = parseInt(angleSlider.value);
+    
+    // Các hằng số hình học cho Canvas
+    const CX = canvas.width / 2;
+    const CY = canvas.height - 60; // Dời tâm xuống dưới để vẽ nửa đường tròn
+    const R = 220; // Bán kính đường tròn đơn vị
+
+    function updateValues(angle) {
+        let alpha = angle;
+        let beta = 180 - angle;
+        
+        let radAlpha = alpha * Math.PI / 180;
+        let radBeta = beta * Math.PI / 180;
+
+        let sinA = Math.sin(radAlpha);
+        let cosA = Math.cos(radAlpha);
+        let sinB = Math.sin(radBeta);
+        let cosB = Math.cos(radBeta);
+
+        // Xử lý làm tròn để tránh lỗi số học (-0.00)
+        cosA = Math.abs(cosA) < 0.0001 ? 0 : cosA;
+        cosB = Math.abs(cosB) < 0.0001 ? 0 : cosB;
+
+        angleValue.textContent = alpha + "°";
+        valA.innerHTML = alpha + "&deg;";
+        valB.innerHTML = beta + "&deg;";
+        
+        valSinA.textContent = sinA.toFixed(2);
+        valSinB.textContent = sinB.toFixed(2);
+        valCosA.textContent = cosA.toFixed(2);
+        valCosB.textContent = cosB.toFixed(2);
+    }
+
+    function drawTextbook() {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        let radAlpha = currentAngle * Math.PI / 180;
+        let radBeta = (180 - currentAngle) * Math.PI / 180;
+
+        let mx = CX + R * Math.cos(radAlpha);
+        let my = CY - R * Math.sin(radAlpha); // Trừ đi vì trục Y canvas hướng xuống
+        
+        let mpx = CX + R * Math.cos(radBeta);
+        let mpy = CY - R * Math.sin(radBeta);
+
+        // 1. Vẽ trục tọa độ Ox, Oy
+        ctx.beginPath();
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.5;
+        // Ox
+        ctx.moveTo(30, CY); ctx.lineTo(canvas.width - 30, CY);
+        // Oy
+        ctx.moveTo(CX, canvas.height - 20); ctx.lineTo(CX, 30);
+        ctx.stroke();
+        
+        // Mũi tên
+        ctx.beginPath();
+        ctx.moveTo(canvas.width - 30, CY); ctx.lineTo(canvas.width - 40, CY - 5); ctx.lineTo(canvas.width - 40, CY + 5); ctx.fill();
+        ctx.moveTo(CX, 30); ctx.lineTo(CX - 5, 40); ctx.lineTo(CX + 5, 40); ctx.fill();
+
+        // 2. Vẽ nửa đường tròn
+        ctx.beginPath();
+        ctx.arc(CX, CY, R, Math.PI, 0, false);
+        ctx.stroke();
+
+        // 3. Vẽ nét đứt chiếu tọa độ
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = '#555';
+        ctx.beginPath();
+        ctx.moveTo(mx, CY); ctx.lineTo(mx, my); ctx.lineTo(CX, my);
+        ctx.moveTo(mpx, CY); ctx.lineTo(mpx, mpy); ctx.lineTo(CX, mpy);
+        ctx.stroke();
+        ctx.setLineDash([]); // Reset
+
+        // 4. Vẽ đoạn OM và OM'
+        ctx.beginPath();
+        ctx.strokeStyle = '#000000';
+        ctx.moveTo(CX, CY); ctx.lineTo(mx, my);
+        ctx.moveTo(CX, CY); ctx.lineTo(mpx, mpy);
+        ctx.stroke();
+
+        // 5. Vẽ cung góc alpha (Màu xanh dương)
+        ctx.beginPath();
+        ctx.strokeStyle = '#03a9f4';
+        ctx.lineWidth = 2;
+        ctx.arc(CX, CY, 40, 0, -radAlpha, true);
+        ctx.stroke();
+
+        // 6. Vẽ cung góc 180 - alpha (Màu đỏ/cam)
+        ctx.beginPath();
+        ctx.strokeStyle = '#ff9800';
+        ctx.arc(CX, CY, 60, 0, -radBeta, true);
+        ctx.stroke();
+        ctx.lineWidth = 1;
+
+        // 7. Thêm nhãn (Text)
+        ctx.fillStyle = '#000';
+        ctx.font = "italic 16px Arial";
+        ctx.fillText("x", canvas.width - 25, CY + 15);
+        ctx.fillText("y", CX + 10, 25);
+        ctx.fillText("O", CX - 15, CY + 20);
+        
+        ctx.fillText("M", mx + 5, my - 5);
+        ctx.fillText("M'", mpx - 20, mpy - 5);
+        
+        ctx.fillText("x₀", mx - 5, CY + 20);
+        ctx.fillText("-x₀", mpx - 10, CY + 20);
+        
+        // Vẽ số 1, -1
+        ctx.fillText("1", CX + R - 5, CY + 20);
+        ctx.fillText("-1", CX - R - 15, CY + 20);
+        ctx.fillText("1", CX - 15, CY - R + 10);
+
+        // Nhãn góc (thêm background trắng nhỏ để không bị nét đứt đè lên)
+        ctx.font = "14px Arial";
+        ctx.fillStyle = '#03a9f4';
+        ctx.fillText("α", CX + 45 * Math.cos(-radAlpha/2) - 5, CY + 45 * Math.sin(-radAlpha/2) + 5);
+        
+        ctx.fillStyle = '#ff9800';
+        ctx.fillText("180° - α", CX + 65 * Math.cos(-radBeta/2) - 25, CY + 65 * Math.sin(-radBeta/2) - 5);
+        
+        // Nhãn y0
+        ctx.fillStyle = '#000';
+        ctx.fillText("y₀", CX + 5, my + 5);
+    }
+
+    function drawRealistic() {
+        // 1. Vẽ nền gỗ (Wood table)
+        let woodGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        woodGrad.addColorStop(0, '#8B5A2B');
+        woodGrad.addColorStop(1, '#6b421a');
+        ctx.fillStyle = woodGrad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 2. Vẽ tờ giấy trắng có bóng đổ
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetX = 5;
+        ctx.shadowOffsetY = 5;
+        ctx.fillStyle = '#fdfcf0';
+        ctx.fillRect(40, 40, canvas.width - 80, canvas.height - 60);
+        // Tắt shadow
+        ctx.shadowColor = 'transparent';
+
+        let radAlpha = currentAngle * Math.PI / 180;
+        let radBeta = (180 - currentAngle) * Math.PI / 180;
+        let mx = CX + R * Math.cos(radAlpha);
+        let my = CY - R * Math.sin(radAlpha);
+        let mpx = CX + R * Math.cos(radBeta);
+        let mpy = CY - R * Math.sin(radBeta);
+
+        // 3. Vẽ đường trục bằng "bút chì" (Pencil lines)
+        ctx.strokeStyle = '#4a4a4a';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(60, CY); ctx.lineTo(canvas.width - 60, CY);
+        ctx.moveTo(CX, canvas.height - 40); ctx.lineTo(CX, 60);
+        ctx.stroke();
+
+        // 4. Vẽ chiếc thước đo độ bằng nhựa trong suốt (Protractor)
+        ctx.fillStyle = 'rgba(173, 216, 230, 0.25)'; // Nhựa xanh nhạt trong suốt
+        ctx.strokeStyle = 'rgba(100, 150, 200, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(CX, CY, R, Math.PI, 0, false);
+        ctx.lineTo(CX + R, CY);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Vòng trong của thước
+        ctx.beginPath();
+        ctx.arc(CX, CY, R - 30, Math.PI, 0, false);
+        ctx.stroke();
+
+        // Vẽ vạch chia độ trên thước
+        ctx.lineWidth = 1;
+        ctx.fillStyle = 'rgba(50,50,50,0.8)';
+        ctx.font = "10px Arial";
+        ctx.textAlign = "center";
+        for (let i = 0; i <= 180; i += 10) {
+            let a = i * Math.PI / 180;
+            let p1x = CX + R * Math.cos(a);
+            let p1y = CY - R * Math.sin(a);
+            let p2x = CX + (R - (i % 90 === 0 ? 15 : 8)) * Math.cos(a);
+            let p2y = CY - (R - (i % 90 === 0 ? 15 : 8)) * Math.sin(a);
+            
+            ctx.beginPath();
+            ctx.moveTo(p1x, p1y);
+            ctx.lineTo(p2x, p2y);
+            ctx.stroke();
+
+            // In số trên thước (chỉ in góc chẵn 30, 60...)
+            if (i % 30 === 0) {
+                let tx = CX + (R - 22) * Math.cos(a);
+                let ty = CY - (R - 22) * Math.sin(a) + 4;
+                ctx.fillText(i, tx, ty);
+            }
+        }
+        ctx.textAlign = "left"; // Reset
+
+        // 5. Vẽ sợi dây/tia chỉ góc
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = '#d32f2f'; // Dây màu đỏ
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(CX, CY); ctx.lineTo(mx, my);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#1976d2'; // Dây màu xanh
+        ctx.beginPath();
+        ctx.moveTo(CX, CY); ctx.lineTo(mpx, mpy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 6. Vẽ các "Ghim" (Pins) tại điểm M và M'
+        function drawPin(x, y, color) {
+            // Bóng ghim
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath(); ctx.arc(x + 3, y + 3, 5, 0, Math.PI * 2); ctx.fill();
+            // Đầu ghim
+            let grad = ctx.createRadialGradient(x-2, y-2, 1, x, y, 6);
+            grad.addColorStop(0, 'white');
+            grad.addColorStop(1, color);
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
+        }
+        drawPin(CX, CY, '#333'); // Ghim tâm
+        drawPin(mx, my, '#d32f2f'); // Ghim góc alpha
+        drawPin(mpx, mpy, '#1976d2'); // Ghim góc bù
+
+        // 7. Đường gióng bút chì nét mờ
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(mx, CY); ctx.lineTo(mx, my); ctx.lineTo(CX, my);
+        ctx.moveTo(mpx, CY); ctx.lineTo(mpx, mpy); ctx.lineTo(CX, mpy);
+        ctx.stroke();
+        
+        // Ghi chú tay (handwriting style)
+        ctx.fillStyle = '#000';
+        ctx.font = "italic 16px 'Comic Sans MS', cursive, sans-serif";
+        ctx.fillText(`α = ${currentAngle}°`, mx + 10, my - 10);
+        ctx.fillText(`${180 - currentAngle}°`, mpx - 40, mpy - 10);
+    }
+
+    // Hàm render chính
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (currentStyle === 'textbook') {
+            drawTextbook();
+        } else {
+            drawRealistic();
+        }
+    }
+
+    
+    // Sự kiện kéo thanh trượt
+    angleSlider.addEventListener('input', (e) => {
+        currentAngle = parseInt(e.target.value);
+        updateValues(currentAngle);
+        render();
+    });
+
+    // Chuyển đổi phong cách
+    styleToggleBtn.addEventListener('click', () => {
+        if (currentStyle === 'textbook') {
+            currentStyle = 'realistic';
+            styleToggleBtn.innerHTML = '📐 Đổi sang Sách giáo khoa';
+            styleToggleBtn.style.backgroundColor = '#4caf50';
+            styleToggleBtn.style.color = 'white';
+        } else {
+            currentStyle = 'textbook';
+            styleToggleBtn.innerHTML = '🎨 Đổi sang chế độ Chân thực';
+            styleToggleBtn.style.backgroundColor = '#fbbc04';
+            styleToggleBtn.style.color = '#202124';
+        }
+        render();
+    });
+
+    // Toàn màn hình
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const appContainer = document.getElementById('app-container');
+    fullscreenBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+            appContainer.requestFullscreen().catch(err => {
+                alert(`Không thể mở toàn màn hình: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    });
+    // Cập nhật text nút toàn màn hình
+    document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement) {
+            fullscreenBtn.innerHTML = '⛶ Thoát toàn màn hình';
+            appContainer.style.overflowY = 'auto'; // Cho phép cuộn khi full
+        } else {
+            fullscreenBtn.innerHTML = '⛶ Toàn màn hình';
+        }
+    });
+
+    // Ẩn / Hiện lời giải
+    const toggleSolutionBtn = document.getElementById('toggleSolutionBtn');
+    const solutionBox = document.getElementById('solution-box');
+    let isSolutionVisible = false;
+    toggleSolutionBtn.addEventListener('click', () => {
+        isSolutionVisible = !isSolutionVisible;
+        if (isSolutionVisible) {
+            solutionBox.style.display = 'block';
+            toggleSolutionBtn.textContent = 'Ẩn lời giải';
+            toggleSolutionBtn.style.backgroundColor = '#5f6368';
+        } else {
+            solutionBox.style.display = 'none';
+            toggleSolutionBtn.textContent = 'Hiện lời giải';
+            toggleSolutionBtn.style.backgroundColor = 'var(--success)';
+        }
+    });
+
+    // Nút Thoát
+    const exitBtn = document.getElementById('exitBtn');
+    exitBtn.addEventListener('click', () => {
+        if (confirm("Bạn có chắc chắn muốn đóng trang này không?")) {
+            // Hàm window.close() thường chỉ hoạt động nếu trang được mở bằng script. 
+            // Ta kết hợp thêm chuyển hướng fallback.
+            window.close();
+            // Nếu không close được (do bảo mật trình duyệt), thay đổi URL:
+            setTimeout(() => {
+                document.body.innerHTML = "<h2 style='text-align:center; margin-top: 50px;'>Đã thoát mô phỏng. Bạn có thể đóng tab trình duyệt này.</h2>";
+            }, 500);
+        }
+    });
+
+    // Khởi chạy lần đầu
+    window.onload = function() {
+        updateValues(currentAngle);
+        render();
+    };
+
+</script>
+</body>
+</html>
