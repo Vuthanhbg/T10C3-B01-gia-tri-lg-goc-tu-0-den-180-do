@@ -4,9 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mô Phỏng Tỉ Số Lượng Giác Góc Nhọn</title>
-    <!-- Thư viện MathJax bắt buộc để hiển thị công thức toán học chuẩn SGK -->
+    
+    <!-- Cấu hình MathJax để hiển thị công thức Toán học chuẩn SGK -->
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+    </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
     <style>
         :root {
             --primary: #2980b9;
@@ -47,11 +56,15 @@
             display: grid;
             grid-template-columns: 1fr;
             gap: 20px;
+            transition: all 0.3s ease;
         }
 
         @media (min-width: 992px) {
             .grid-container {
                 grid-template-columns: 2fr 1fr;
+            }
+            .grid-container.hide-aside {
+                grid-template-columns: 1fr; /* Mở rộng cột trái khi ẩn cột phải */
             }
         }
 
@@ -118,6 +131,8 @@
         
         #fullscreenBtn { background-color: var(--primary); }
         #fullscreenBtn.exit-mode { background-color: var(--danger); }
+        
+        #toggleSolutionBtn { background-color: #8e44ad; }
 
         /* Khung chứa Canvas */
         .canvas-container {
@@ -201,7 +216,7 @@
             padding: 15px;
             border-radius: 8px;
             border: 1px solid #d6eaf8;
-            min-height: 220px; /* Chống giật layout khi tải MathJax */
+            min-height: 220px;
             overflow-x: auto;
         }
 
@@ -225,6 +240,14 @@
             border-top: 2px dashed #bdc3c7;
             background: var(--panel-bg);
             border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #exitBtn {
+            background-color: var(--danger);
         }
 
         /* CSS khi bật chế độ toàn màn hình */
@@ -248,7 +271,6 @@
 </head>
 <body>
 
-<!-- Bao bọc nội dung bằng thẻ wrapper để khi Fullscreen không bị đen nền -->
 <div class="wrapper" id="app-wrapper">
     
     <header>
@@ -256,7 +278,7 @@
         <div class="subtitle">Tam giác ABC vuông tại A, góc nhọn C được ký hiệu là α</div>
     </header>
 
-    <div class="grid-container">
+    <div class="grid-container" id="mainGrid">
         <!-- Cột Trái: Canvas và Điều khiển -->
         <main>
             <div class="panel">
@@ -267,10 +289,12 @@
                     <button id="fullscreenBtn" aria-label="Phóng to toàn màn hình">
                         <span>🔲</span> Hiển thị Toàn màn hình
                     </button>
+                    <button id="toggleSolutionBtn" aria-label="Ẩn hiện lời giải">
+                        <span>👁️</span> Ẩn Lời giải
+                    </button>
                 </div>
                 
                 <div class="canvas-container">
-                    <!-- Khu vực Canvas dùng để vẽ mọi thứ -->
                     <canvas id="canvas" width="800" height="460" aria-label="Khu vực mô phỏng tam giác vuông"></canvas>
                 </div>
                 
@@ -288,7 +312,7 @@
         </main>
 
         <!-- Cột Phải: Dữ liệu tính toán & Câu hỏi sư phạm -->
-        <aside>
+        <aside id="solutionArea">
             <div class="panel">
                 <h3>Thống kê dữ liệu</h3>
                 <table class="value-table">
@@ -315,9 +339,10 @@
         </aside>
     </div>
 
-    <!-- Chân trang Bản quyền theo yêu cầu -->
+    <!-- Chân trang Bản quyền -->
     <footer>
-        Bản quyền số Vũ Trung Thành THPT Bình Giang
+        <div>Tác giả: Vũ Trung Thành - Tổ Toán-Tin, THPT Bình Giang, Zalo: 0979791802</div>
+        <button id="exitBtn">✖ Thoát và đóng trình duyệt</button>
     </footer>
 
 </div>
@@ -325,6 +350,8 @@
 <script>
     // ---------------- LẤY CÁC PHẦN TỬ DOM ----------------
     const appWrapper = document.getElementById('app-wrapper');
+    const mainGrid = document.getElementById('mainGrid');
+    const solutionArea = document.getElementById('solutionArea');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     
@@ -335,16 +362,18 @@
     
     const btnStyle = document.getElementById('styleToggle');
     const btnFullscreen = document.getElementById('fullscreenBtn');
+    const btnToggleSolution = document.getElementById('toggleSolutionBtn');
+    const btnExit = document.getElementById('exitBtn');
     
     // ---------------- TRẠNG THÁI HỆ THỐNG ----------------
-    let currentStyle = 'textbook'; // 'textbook' | 'realistic'
+    let currentStyle = 'textbook';
+    let isSolutionVisible = true;
     let AB = parseFloat(sliderAB.value);
     let AC = parseFloat(sliderAC.value);
     let BC = 0;
     let alphaRad = 0;
     let alphaDeg = 0;
 
-    // Các hằng số định vị bản vẽ trên Canvas
     const SCALE = 14; 
     const originX = 140; 
     const originY = 380; 
@@ -352,17 +381,15 @@
     // ---------------- TOÁN HỌC ----------------
     function calculateData() {
         BC = Math.sqrt(AB * AB + AC * AC);
-        alphaRad = Math.atan(AB / AC); // Góc C = arctan(đối/kề)
+        alphaRad = Math.atan(AB / AC); 
         alphaDeg = alphaRad * (180 / Math.PI);
     }
 
     // ---------------- VẼ CANVAS: SÁCH GIÁO KHOA ----------------
     function drawTextbook() {
-        // Nền trắng
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Tọa độ 3 đỉnh
         const pxA = originX;
         const pyA = originY;
         const pxB = originX;
@@ -370,34 +397,30 @@
         const pxC = originX + AC * SCALE;
         const pyC = originY;
 
-        // Vẽ lưới grid mờ
         ctx.strokeStyle = '#ecf0f1';
         ctx.lineWidth = 1;
         for(let i=0; i<=canvas.width; i+=25) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
         for(let j=0; j<=canvas.height; j+=25) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(canvas.width,j); ctx.stroke(); }
 
-        // Vẽ tam giác nền
         ctx.beginPath();
         ctx.moveTo(pxA, pyA); ctx.lineTo(pxB, pyB); ctx.lineTo(pxC, pyC);
         ctx.closePath();
         ctx.fillStyle = 'rgba(52, 152, 219, 0.05)';
         ctx.fill();
         
-        // Vẽ 3 cạnh với màu sắc đặc trưng
         ctx.lineWidth = 4;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
         
-        ctx.strokeStyle = '#e74c3c'; // Cạnh đối (Đỏ)
+        ctx.strokeStyle = '#e74c3c'; 
         ctx.beginPath(); ctx.moveTo(pxA, pyA); ctx.lineTo(pxB, pyB); ctx.stroke();
         
-        ctx.strokeStyle = '#27ae60'; // Cạnh kề (Xanh lá)
+        ctx.strokeStyle = '#27ae60'; 
         ctx.beginPath(); ctx.moveTo(pxA, pyA); ctx.lineTo(pxC, pyC); ctx.stroke();
         
-        ctx.strokeStyle = '#2980b9'; // Cạnh huyền (Xanh biển)
+        ctx.strokeStyle = '#2980b9'; 
         ctx.beginPath(); ctx.moveTo(pxB, pyB); ctx.lineTo(pxC, pyC); ctx.stroke();
 
-        // Ký hiệu góc vuông tại A
         const sqSize = 22;
         ctx.strokeStyle = '#2c3e50';
         ctx.lineWidth = 2;
@@ -407,14 +430,12 @@
         ctx.lineTo(pxA + sqSize, pyA);
         ctx.stroke();
 
-        // Cung tròn thể hiện góc Alpha (C)
         ctx.beginPath();
         ctx.arc(pxC, pyC, 45, Math.PI, Math.PI + alphaRad);
         ctx.strokeStyle = '#8e44ad';
         ctx.lineWidth = 2;
         ctx.stroke();
         
-        // Tô nền nhẹ cho góc Alpha
         ctx.beginPath();
         ctx.moveTo(pxC, pyC);
         ctx.arc(pxC, pyC, 45, Math.PI, Math.PI + alphaRad);
@@ -422,7 +443,6 @@
         ctx.fillStyle = 'rgba(142, 68, 173, 0.15)';
         ctx.fill();
 
-        // Vẽ Nhãn các đỉnh & cạnh
         ctx.font = 'bold 22px "Times New Roman", serif';
         ctx.fillStyle = '#2c3e50';
         ctx.textAlign = 'center';
@@ -434,7 +454,6 @@
         ctx.fillStyle = '#e74c3c'; ctx.fillText('AB (Đối)', pxA - 45, pyA - (AB*SCALE)/2);
         ctx.fillStyle = '#27ae60'; ctx.fillText('AC (Kề)', pxA + (AC*SCALE)/2, pyA + 25);
         
-        // Vẽ Text cạnh huyền theo độ dốc
         ctx.save();
         ctx.translate(pxA + (AC*SCALE)/2, pyA - (AB*SCALE)/2);
         ctx.rotate(-alphaRad);
@@ -442,7 +461,6 @@
         ctx.fillText('BC (Huyền)', 0, -10);
         ctx.restore();
 
-        // Ký hiệu góc Alpha
         ctx.font = 'italic bold 22px "Times New Roman", serif';
         ctx.fillStyle = '#8e44ad';
         ctx.fillText('α', pxC - 60, pyC - 12);
@@ -457,23 +475,19 @@
         const pxC = originX + AC * SCALE;
         const pyC = originY;
 
-        // Vẽ Bầu trời Gradient
         let skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        skyGradient.addColorStop(0, "#87CEFA"); // Light sky blue
-        skyGradient.addColorStop(1, "#f0f8ff"); // Alice blue
+        skyGradient.addColorStop(0, "#87CEFA"); 
+        skyGradient.addColorStop(1, "#f0f8ff"); 
         ctx.fillStyle = skyGradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Vẽ Mặt đất (Cạnh kề)
         ctx.fillStyle = "#8b5a2b"; 
         ctx.fillRect(0, pyA, canvas.width, canvas.height - pyA);
-        ctx.fillStyle = "#6B8E23"; // Olive Drab grass
+        ctx.fillStyle = "#6B8E23"; 
         ctx.fillRect(0, pyA, canvas.width, 20);
 
-        // Vẽ Bức tường (Cạnh đối)
-        ctx.fillStyle = "#CD5C5C"; // Indian Red brick
+        ctx.fillStyle = "#CD5C5C"; 
         ctx.fillRect(pxA - 70, pyB, 70, canvas.height - pyB);
-        // Vân gạch
         ctx.strokeStyle = "#800000";
         ctx.lineWidth = 1;
         for(let y = pyB; y < canvas.height; y += 15) {
@@ -483,26 +497,22 @@
             }
         }
 
-        // Bóng đổ của thang
         ctx.beginPath();
         ctx.moveTo(pxB, pyB + 5); ctx.lineTo(pxC + 5, pyC); ctx.lineTo(pxA, pyA);
         ctx.fillStyle = "rgba(0,0,0,0.25)";
         ctx.fill();
 
-        // Vẽ Chiếc thang gỗ (Cạnh huyền)
         ctx.lineCap = "round";
         const dx = Math.sin(alphaRad) * 7;
         const dy = Math.cos(alphaRad) * 7;
         
-        // 2 thanh dọc của thang
-        ctx.strokeStyle = "#A0522D"; // Sienna
+        ctx.strokeStyle = "#A0522D"; 
         ctx.lineWidth = 10;
         ctx.beginPath(); ctx.moveTo(pxB - dx, pyB - dy); ctx.lineTo(pxC - dx, pyC - dy); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(pxB + dx, pyB + dy); ctx.lineTo(pxC + dx, pyC + dy); ctx.stroke();
         
-        // Bậc thang
         ctx.lineWidth = 5;
-        ctx.strokeStyle = "#8B4513"; // Saddle Brown
+        ctx.strokeStyle = "#8B4513"; 
         const steps = Math.floor(BC / 1.5);
         for(let i = 1; i < steps; i++) {
             let t = i / steps;
@@ -514,16 +524,14 @@
             ctx.stroke();
         }
 
-        // Đánh dấu góc Alpha Ảo
         ctx.beginPath();
         ctx.arc(pxC, pyC, 55, Math.PI, Math.PI + alphaRad);
         ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
         ctx.lineWidth = 3;
-        ctx.setLineDash([5, 5]); // Nét đứt
+        ctx.setLineDash([5, 5]);
         ctx.stroke();
-        ctx.setLineDash([]); // Reset nét đứt
+        ctx.setLineDash([]); 
 
-        // Chữ chú thích có viền đen shadow để nổi bật trên nền ảnh
         ctx.font = 'bold 16px Arial, sans-serif';
         ctx.fillStyle = '#FFFFFF';
         ctx.textAlign = 'center';
@@ -535,22 +543,20 @@
         ctx.fillText('C (Chân Thang)', pxC + 40, pyC + 35);
         
         ctx.font = 'italic bold 22px "Times New Roman", serif';
-        ctx.fillStyle = '#f1c40f'; // Vàng cho góc alpha
+        ctx.fillStyle = '#f1c40f'; 
         ctx.fillText('α', pxC - 75, pyC - 15);
         
-        ctx.shadowBlur = 0; // Tắt shadow
+        ctx.shadowBlur = 0; 
     }
 
     // ---------------- CẬP NHẬT GIAO DIỆN & MATHJAX ----------------
     let mathJaxTimer;
 
     function updateSimulation() {
-        // Cập nhật giá trị
         AB = parseFloat(sliderAB.value);
         AC = parseFloat(sliderAC.value);
         calculateData();
 
-        // Xóa và vẽ lại Canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (currentStyle === 'textbook') {
             drawTextbook();
@@ -558,7 +564,6 @@
             drawRealistic();
         }
 
-        // Cập nhật Text DOM
         valAB.textContent = AB;
         valAC.textContent = AC;
         document.getElementById('dispAB').textContent = AB;
@@ -566,7 +571,6 @@
         document.getElementById('dispBC').textContent = BC.toFixed(2);
         document.getElementById('dispAlpha').textContent = alphaDeg.toFixed(2) + '°';
 
-        // Tối ưu render MathJax: Đợi user ngừng kéo slider 150ms mới render công thức
         clearTimeout(mathJaxTimer);
         mathJaxTimer = setTimeout(renderMathFormulas, 150);
     }
@@ -588,13 +592,14 @@
         container.innerHTML = htmlString;
 
         if (window.MathJax) {
+            MathJax.typesetClear([container]);
             MathJax.typesetPromise([container]).catch(err => console.error(err));
         }
     }
 
     // ---------------- SỰ KIỆN NÚT BẤM ----------------
     
-    // Toggle Phong cách hiển thị
+    // Toggle Phong cách
     btnStyle.addEventListener('click', () => {
         if (currentStyle === 'textbook') {
             currentStyle = 'realistic';
@@ -608,9 +613,24 @@
         updateSimulation();
     });
 
-    // Toggle Toàn màn hình (Fullscreen API)
+    // Nút Ẩn/Hiện Lời giải
+    btnToggleSolution.addEventListener('click', () => {
+        isSolutionVisible = !isSolutionVisible;
+        if (isSolutionVisible) {
+            solutionArea.style.display = 'block';
+            mainGrid.classList.remove('hide-aside');
+            btnToggleSolution.innerHTML = '<span>👁️</span> Ẩn Lời giải';
+        } else {
+            solutionArea.style.display = 'none';
+            mainGrid.classList.add('hide-aside');
+            btnToggleSolution.innerHTML = '<span>👁️</span> Hiện Lời giải';
+        }
+        // Gọi update để Canvas cân chỉnh lại nếu đổi kích thước
+        setTimeout(updateSimulation, 50);
+    });
+
+    // Toàn màn hình
     function toggleFullscreen() {
-        // Đưa toàn bộ thẻ wrapper vào chế độ fullscreen để giữ cả thanh trượt và công thức
         if (!document.fullscreenElement) {
             if (appWrapper.requestFullscreen) appWrapper.requestFullscreen();
             else if (appWrapper.webkitRequestFullscreen) appWrapper.webkitRequestFullscreen();
@@ -624,10 +644,9 @@
 
     btnFullscreen.addEventListener('click', toggleFullscreen);
 
-    // Lắng nghe trạng thái màn hình để đổi giao diện nút
     document.addEventListener('fullscreenchange', () => {
         if (document.fullscreenElement) {
-            btnFullscreen.innerHTML = '<span>❌</span> Thoát Toàn màn hình';
+            btnFullscreen.innerHTML = '<span>❌</span> Thu nhỏ';
             btnFullscreen.classList.add('exit-mode');
         } else {
             btnFullscreen.innerHTML = '<span>🔲</span> Hiển thị Toàn màn hình';
@@ -635,7 +654,16 @@
         }
     });
 
-    // Lắng nghe thao tác kéo thanh trượt
+    // Sự kiện thoát trình duyệt
+    btnExit.addEventListener('click', () => {
+        if (document.fullscreenElement) document.exitFullscreen();
+        if(confirm("Bạn có chắc chắn muốn thoát mô phỏng và đóng cửa sổ này không?")) {
+            window.close();
+            alert("Tác giả: Vũ Trung Thành - Tổ Toán-Tin, THPT Bình Giang, Zalo: 0979791802");
+        }
+    });
+
+    // Lắng nghe thanh trượt
     sliderAB.addEventListener('input', updateSimulation);
     sliderAC.addEventListener('input', updateSimulation);
 
@@ -647,15 +675,3 @@
 </script>
 </body>
 </html>
-```eof
-
-### 📋 Hướng dẫn sử dụng file:
-1. Bạn hãy sao chép toàn bộ mã code phía trên.
-2. Tạo một file trống trên máy tính có tên `mo_phong_toan_cap_nhat.html`.
-3. Dán code vào, lưu lại và click đúp để mở trên trình duyệt (Chrome, Cốc Cốc, Edge).
-
-### 🌟 Tóm tắt các tính năng đã cập nhật:
-*   **Vẽ hoàn toàn bằng Canvas:** Cả hai chế độ (Sách giáo khoa, Chân thực - bức tường cái thang) đều được tính toán và vẽ chính xác tỉ lệ thông qua tọa độ Canvas. Không sử dụng bất cứ hình ảnh chèn ngoài nào.
-*   **Công thức Toán SGK:** Sử dụng thư viện **MathJax** kết xuất các phân số và ký tự Lượng giác (Sin, Cos, Tan, Cot) tự động nhảy số theo thông số thanh trượt. Logic đã được gắn bộ đếm giờ (debounce) 150ms để **ngăn ngừa hiện tượng giật lag** khi kéo thanh trượt quá nhanh.
-*   **Chế độ Toàn Màn Hình (Fullscreen):** Nút *Hiển thị Toàn màn hình* góc trên bên trái sẽ bung rộng toàn bộ giao diện bài học (chứ không chỉ riêng khung vẽ). Khi đang ở chế độ Fullscreen, nút đó sẽ tự động đổi màu Đỏ và tên thành **❌ Thoát Toàn màn hình**. Bạn cũng có thể bấm `ESC` để thoát.
-*   **Bản quyền:** Đã thêm dòng thông tin `Bản quyền số Vũ Trung Thành THPT Bình Giang` ở cuối trang (footer) một cách gọn gàng, tinh tế.
